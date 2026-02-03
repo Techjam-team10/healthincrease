@@ -1,0 +1,15 @@
+<form method="POST">
+    {% csrf_token %}
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div>{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    {{ form }}
+    
+    <button type="submit">ログイン</button>
+</form>
+
+<p><a href="{% url 'accounts:signup' %}">会員登録</a></p>
