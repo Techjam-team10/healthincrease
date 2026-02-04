@@ -8,21 +8,22 @@ def calculate_category_ratio(aggregated_data: dict) -> dict:
     """カテゴリ別合計時間から割合（％）を算出する"""
     total_time = sum(aggregated_data.values())
     if total_time == 0:
-        return {category: 0.0 for category in aggregated_data}
-    
+        return {category: 0 for category in aggregated_data}
     return {
-        category: round((time / total_time) * 100, 1)
+        category: round((time / total_time) * 100)
         for category, time in aggregated_data.items()
     }
+
 
 def get_ideal_balance() -> dict:
     """
     理想的な行動バランスを取得する
     ※Categoryモデルにideal_percentageを追加している場合はそこから取得
     """
-    categories = Category.objects.all()
-    if categories.exists():
-        return {cat.title: float(cat.ideal_percentage) for cat in categories}
+    categories = Category.objects.filter(parent__isnull=True)
+    return {
+        category: getattr(category, "ideal_percentage", 0)
+        for category in categories
     
     # 予備のデフォルト値
     return {"睡眠": 33.3, "仕事": 33.3, "運動": 10.0, "食事": 15.0, "その他": 8.4}
@@ -31,8 +32,8 @@ def compare_actual_with_ideal(actual: dict, ideal: dict) -> dict:
     """実績と理想値の差分を計算する"""
     all_categories = set(actual.keys()) | set(ideal.keys())
     return {
-        cat: round(actual.get(cat, 0.0) - ideal.get(cat, 0.0), 1)
-        for cat in all_categories
+        category: actual.get(category, 0) - ideal.get(category, 0)
+        for category in all_categories
     }
 
 # --- D. レーダーチャート用 ---
@@ -71,20 +72,9 @@ def generate_radar_chart_data(user, start_date: date, end_date: date) -> list:
 
 def save_radar_data(user, category: Category, value: int) -> RadarChart:
     """レーダーチャート値を保存または更新する"""
-    radar_obj, created = RadarChart.objects.get_or_create(
+    radar_data, _ = RadarChartData.objects.update_or_create(
         user=user,
-        defaults={'data1': 0, 'data2': 0, 'data3': 0, 'data4': 0, 'data5': 0, 'data6': 0}
+        category=category,
+        defaults={"value": value}
     )
-    
-    # カテゴリ名に応じたフィールドマッピング
-    mapping = {
-        "睡眠": "data1", "仕事": "data2", "運動": "data3",
-        "食事": "data4", "学習": "data5", "その他": "data6",
-    }
-    
-    field_name = mapping.get(category.title)
-    if field_name:
-        setattr(radar_obj, field_name, value)
-        radar_obj.save()
-        
-    return radar_obj
+    return radar_data
