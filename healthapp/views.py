@@ -386,7 +386,7 @@ def lifestyle_detail(request, date):
     self_evaluation_value = items[0].self_evaluation if items else 0
 
     notice = ""
-        if request.method == "POST":
+    if request.method == "POST":
         self_eval_str = request.POST.get("self_evaluation", "").strip()
         category_values = request.POST.getlist("category")
         times = request.POST.getlist("time")
