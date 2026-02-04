@@ -1,1 +1,187 @@
 {% extends 'base.html' %}
+
+{% block content %}
+<h2>行動の詳細・編集 ({{ date_value|date:'Y-m-d' }})</h2>
+
+{% if notice %}
+	<p>{{ notice }}</p>
+{% endif %}
+
+<section>
+	<h3>当日の帯グラフ</h3>
+	{% if chart_data.group %}
+		<div class="band-legend">
+			{% for item in chart_data.legend %}
+				<span class="legend-item">
+					<span class="legend-color" style="background-color: {{ item.color }};"></span>
+					{{ item.label }}
+				</span>
+			{% endfor %}
+		</div>
+		<div class="band-chart">
+			<div class="band-row">
+				<div class="band-date">{{ chart_data.group.date }}</div>
+				<div class="band-bar">
+					{% for segment in chart_data.group.segments %}
+						<div
+							class="band-segment"
+							style="width: {{ segment.percent }}%; background-color: {{ segment.color }};"
+							title="{{ segment.label }}: {{ segment.hours }}時間"
+						></div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	{% else %}
+		<p>行動ログがありません。</p>
+	{% endif %}
+</section>
+
+<form method="post" action="{% url 'healthapp:lifestyle_detail' date_value|date:'Y-m-d' %}">
+	{% csrf_token %}
+	<input type="hidden" name="date" value="{{ date_value|date:'Y-m-d' }}">
+
+	<div id="action-rows">
+		{% for row in rows %}
+		<div class="action-row">
+			<div>
+				<label>カテゴリ</label>
+				<select name="category">
+					<option value="">--選択--</option>
+					{% for parent, children in category_groups %}
+					<optgroup label="{{ parent.title }}">
+						{% for child in children %}
+						<option value="{{ child.id }}" {% if row.category_id|stringformat:"s" == child.id|stringformat:"s" %}selected{% endif %}>
+							{{ child.title }}
+						</option>
+						{% endfor %}
+					</optgroup>
+					{% endfor %}
+				</select>
+			</div>
+			<div>
+				<label>時間(時間)</label>
+				<input type="number" name="time" min="0" step="0.1" value="{{ row.time }}">
+			</div>
+			<div>
+				<label>内容(任意)</label>
+				<input type="text" name="content" value="{{ row.content }}">
+			</div>
+			<div>
+				<button type="button" class="remove-row">-</button>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+	<button type="button" id="add-row">＋</button>
+	<button type="submit">更新</button>
+</form>
+
+<p><a href="{% url 'healthapp:lifestyle' %}">一覧に戻る</a></p>
+
+<template id="action-row-template">
+	<div class="action-row">
+		<div>
+			<label>カテゴリ</label>
+			<select name="category">
+				<option value="">--選択--</option>
+				{% for parent, children in category_groups %}
+				<optgroup label="{{ parent.title }}">
+					{% for child in children %}
+					<option value="{{ child.id }}">{{ child.title }}</option>
+					{% endfor %}
+				</optgroup>
+				{% endfor %}
+			</select>
+		</div>
+		<div>
+			<label>時間(時間)</label>
+			<input type="number" name="time" min="0" step="0.1" value="">
+		</div>
+		<div>
+			<label>内容(任意)</label>
+			<input type="text" name="content" value="">
+		</div>
+		<div>
+			<button type="button" class="remove-row">-</button>
+		</div>
+	</div>
+</template>
+
+<script>
+	const actionRows = document.getElementById('action-rows');
+	const addRowButton = document.getElementById('add-row');
+	const rowTemplate = document.getElementById('action-row-template');
+
+	const updateRemoveButtons = () => {
+		const buttons = actionRows.querySelectorAll('.remove-row');
+		buttons.forEach((button) => {
+			button.disabled = buttons.length <= 1;
+		});
+	};
+
+	addRowButton.addEventListener('click', () => {
+		actionRows.appendChild(rowTemplate.content.cloneNode(true));
+		updateRemoveButtons();
+	});
+
+	actionRows.addEventListener('click', (event) => {
+		if (event.target.classList.contains('remove-row')) {
+			const row = event.target.closest('.action-row');
+			if (row && actionRows.children.length > 1) {
+				row.remove();
+				updateRemoveButtons();
+			}
+		}
+	});
+
+	updateRemoveButtons();
+</script>
+
+<style>
+	.band-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-bottom: 12px;
+	}
+	.legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 14px;
+	}
+	.legend-color {
+		width: 12px;
+		height: 12px;
+		display: inline-block;
+		border-radius: 2px;
+	}
+	.band-chart {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin-bottom: 16px;
+	}
+	.band-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+	.band-date {
+		min-width: 110px;
+		font-weight: 600;
+	}
+	.band-bar {
+		display: flex;
+		width: 100%;
+		height: 18px;
+		background: #e5e7eb;
+		border-radius: 6px;
+		overflow: hidden;
+	}
+	.band-segment {
+		height: 100%;
+	}
+</style>
+{% endblock %}

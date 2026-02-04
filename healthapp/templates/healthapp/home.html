@@ -2,4 +2,83 @@
 
 {% block content %}
 <h1>Home</h1>
+
+<section>
+	<h2>行動ログ</h2>
+	{% if chart_data.groups %}
+		<div class="band-legend">
+			{% for item in chart_data.legend %}
+				<span class="legend-item">
+					<span class="legend-color" style="background-color: {{ item.color }};"></span>
+					{{ item.label }}
+				</span>
+			{% endfor %}
+		</div>
+
+		<div class="band-chart">
+			{% for group in chart_data.groups %}
+				<div class="band-row">
+					<div class="band-date">{{ group.date }}</div>
+					<div class="band-bar">
+						{% for segment in group.segments %}
+							<div
+								class="band-segment"
+								style="width: {{ segment.percent }}%; background-color: {{ segment.color }};"
+								title="{{ segment.label }}: {{ segment.hours }}時間"
+							></div>
+						{% endfor %}
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		<p>行動ログがありません。</p>
+	{% endif %}
+</section>
+
+<style>
+	.band-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-bottom: 12px;
+	}
+	.legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 14px;
+	}
+	.legend-color {
+		width: 12px;
+		height: 12px;
+		display: inline-block;
+		border-radius: 2px;
+	}
+	.band-chart {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.band-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+	.band-date {
+		min-width: 110px;
+		font-weight: 600;
+	}
+	.band-bar {
+		display: flex;
+		width: 100%;
+		height: 18px;
+		background: #e5e7eb;
+		border-radius: 6px;
+		overflow: hidden;
+	}
+	.band-segment {
+		height: 100%;
+	}
+</style>
 {% endblock %}

@@ -1,6 +1,6 @@
 from django import forms
 from accounts.models import User
-from .models import Target
+from .models import Target, Category, LifeStyle
 
 
 class UserProfileForm(forms.ModelForm):
@@ -59,3 +59,27 @@ class AchievementLevelForm(forms.ModelForm):
         labels = {
             'achievement_level': '達成度 (0-100)',
         }
+
+
+class LifeStyleForm(forms.ModelForm):
+    class Meta:
+        model = LifeStyle
+        fields = ['date', 'category', 'time', 'content']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'time': forms.NumberInput(
+                attrs={'min': 0, 'step': '0.1', 'class': 'form-control'}
+            ),
+            'content': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
+        labels = {
+            'date': '日付',
+            'category': 'カテゴリ',
+            'time': '時間(時間)',
+            'content': '内容(任意)',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(parent__isnull=False)
