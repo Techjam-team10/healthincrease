@@ -44,5 +44,8 @@ def signup(request):
     return render(request, "accounts/signup.html", {'form': form})
 
 
+@login_required
 def signout(request):
-    return render(request,"accounts/signout.html")
+    logout(request)
+    messages.success(request, 'ログアウトしました。')
+    return redirect('accounts:signin')
