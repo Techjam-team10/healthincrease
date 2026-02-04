@@ -1,5 +1,5 @@
 from django.db.models import Sum
-from ..models import Category, LifeStyle, RadarChart
+from ..models import Category, LifeStyle, RadarChartData
 from datetime import date
 
 # --- C. 分析・可視化 (当初の指定) ---
@@ -24,6 +24,7 @@ def get_ideal_balance() -> dict:
     return {
         category: getattr(category, "ideal_percentage", 0)
         for category in categories
+    }
     
     # 予備のデフォルト値
     return {"睡眠": 33.3, "仕事": 33.3, "運動": 10.0, "食事": 15.0, "その他": 8.4}

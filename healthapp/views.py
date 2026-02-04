@@ -5,6 +5,9 @@ from django.shortcuts import render
 def top(request):
     return render(request, "healthapp/index.html")
 
+def home(request):
+    return render(request, 'healthapp/home.html')
+
 
 def profile(request):
     return render(request, "healthapp/profile.html")
@@ -48,3 +51,6 @@ def lifestyle_detail(request, date):
 
 def lifestyle_setdata(request, date):
     return render(request, "healthapp/lifestyle_setdata.html", {"date": date})
+
+def analysis(request):
+    return render(request, "healthapp/analysis.html")
