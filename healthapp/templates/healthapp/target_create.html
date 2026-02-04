@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>目標を作成</h2>
+
+<form method="post" action="{% url 'healthapp:target_create' %}">
+    {% csrf_token %}
+    <div>
+        {{ form.term.label_tag }}
+        {{ form.term }}
+        {% if form.term.errors %}
+            <div>{{ form.term.errors }}</div>
+        {% endif %}
+    </div>
+    <div>
+        {{ form.content.label_tag }}
+        {{ form.content }}
+        {% if form.content.errors %}
+            <div>{{ form.content.errors }}</div>
+        {% endif %}
+    </div>
+    <button type="submit">作成</button>
+</form>
+
+<p><a href="{% url 'healthapp:target' %}">一覧に戻る</a></p>
+{% endblock %}

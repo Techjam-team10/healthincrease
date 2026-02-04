@@ -14,9 +14,11 @@
 <h3>自己評価を更新</h3>
 <form method="post" action="{% url 'healthapp:update_achievement' target.id %}">
     {% csrf_token %}
-    <label for="level">達成度を入力 (0-100):</label>
-    <input type="number" name="achievement_level" id="level" 
-           min="0" max="100" value="{{ target.achievement_level }}">
+    {{ achievement_form.achievement_level.label_tag }}
+    {{ achievement_form.achievement_level }}
+    {% if achievement_form.achievement_level.errors %}
+        <div>{{ achievement_form.achievement_level.errors }}</div>
+    {% endif %}
     <button type="submit">更新</button>
 </form>
 

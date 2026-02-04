@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from accounts.models import User
-from .forms import UserProfileForm
+from .forms import UserProfileForm, TargetForm, AchievementLevelForm
+from .models import Target
+from .services.target import create_target, update_achievement_level
 
 
 def top(request):
@@ -144,12 +146,70 @@ def timeline_detail(request, post_id):
     )
 
 
+@login_required
 def target(request):
-    return render(request, "healthapp/target.html")
+    targets = Target.objects.filter(user=request.user).order_by("term", "id")
+    return render(request, "healthapp/target.html", {"targets": targets})
 
 
-def target_detail(request, term_id):
-    return render(request, "healthapp/target_detail.html", {"term_id": term_id})
+@login_required
+def target_detail(request, target_id):
+    target = get_object_or_404(Target, pk=target_id, user=request.user)
+    achievement_form = AchievementLevelForm(instance=target)
+    return render(
+        request,
+        "healthapp/target_detail.html",
+        {"target": target, "achievement_form": achievement_form},
+    )
+
+
+@login_required
+def target_create(request):
+    if request.method == "POST":
+        form = TargetForm(request.POST)
+        if form.is_valid():
+            term = form.cleaned_data["term"]
+            content = form.cleaned_data["content"]
+            target = create_target(user=request.user, term=term, content=content)
+            return redirect("healthapp:target_detail", target_id=target.id)
+    else:
+        form = TargetForm()
+    return render(request, "healthapp/target_create.html", {"form": form})
+
+
+@login_required
+def target_edit(request, target_id):
+    target = get_object_or_404(Target, pk=target_id, user=request.user)
+    if request.method == "POST":
+        form = TargetForm(request.POST, instance=target)
+        if form.is_valid():
+            form.save()
+            return redirect("healthapp:target_detail", target_id=target.id)
+    else:
+        form = TargetForm(instance=target)
+    return render(
+        request,
+        "healthapp/target_edit.html",
+        {"form": form, "target": target},
+    )
+
+
+@login_required
+def update_achievement(request, target_id):
+    target = get_object_or_404(Target, pk=target_id, user=request.user)
+    if request.method != "POST":
+        return redirect("healthapp:target_detail", target_id=target.id)
+
+    form = AchievementLevelForm(request.POST, instance=target)
+    if form.is_valid():
+        update_achievement_level(target, form.cleaned_data["achievement_level"])
+        return redirect("healthapp:target_detail", target_id=target.id)
+
+    return render(
+        request,
+        "healthapp/target_detail.html",
+        {"target": target, "achievement_form": form},
+    )
 
 
 def lifestyle(request):
