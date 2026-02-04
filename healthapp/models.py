@@ -5,12 +5,27 @@ from accounts.models import User
 
 class Category(models.Model):
     id = models.BigAutoField(primary_key=True)
-    title = models.CharField(
-        max_length=100,
-        unique=True
+
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="children"
     )
 
+    title = models.CharField(
+        max_length=100
+    )
+
+    class Meta:
+        db_table = "category"
+        unique_together = ("parent", "title")
+        ordering = ["parent_id", "id"]
+
     def __str__(self):
+        if self.parent:
+            return f"{self.parent.title} / {self.title}"
         return self.title
     
 
@@ -103,31 +118,32 @@ class Comment(models.Model):
         return f"Comment {self.id}"
 
 
-class RadarChart(models.Model):
+class RadarChartData(models.Model):
     id = models.BigAutoField(primary_key=True)
-    user = models.OneToOneField(
+
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="radar_chart"
-    )
-    data1 = models.SmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    data2 = models.SmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    data3 = models.SmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    data4 = models.SmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    data5 = models.SmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    data6 = models.SmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
+        related_name="radar_data"
     )
 
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="radar_values"
+    )
+
+    value = models.SmallIntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100)
+        ]
+    )
+
+    class Meta:
+        db_table = "radar_chart_data"
+        unique_together = ("user", "category")
+        ordering = ["user_id", "category_id"]
+
     def __str__(self):
-        return f"RadarChart for {self.user.mail}"
+        return f"{self.user.mail} - {self.category.title}: {self.value}"
