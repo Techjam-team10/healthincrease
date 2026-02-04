@@ -32,10 +32,10 @@
 				<label>カテゴリ</label>
 				<select name="category">
 					<option value="">--選択--</option>
-					{% for parent, children in category_groups %}
-					<optgroup label="{{ parent.title }}">
-						{% for child in children %}
-						<option value="{{ child.id }}" {% if row.category_id|stringformat:"s" == child.id|stringformat:"s" %}selected{% endif %}>
+					{% for group in category_groups %}
+					<optgroup label="{{ group.parent }}">
+						{% for child in group.children %}
+						<option value="{{ child.value }}" {% if row.category_value == child.value %}selected{% endif %}>
 							{{ child.title }}
 						</option>
 						{% endfor %}
@@ -106,10 +106,10 @@
 			<label>カテゴリ</label>
 			<select name="category">
 				<option value="">--選択--</option>
-				{% for parent, children in category_groups %}
-				<optgroup label="{{ parent.title }}">
-					{% for child in children %}
-					<option value="{{ child.id }}">{{ child.title }}</option>
+				{% for group in category_groups %}
+				<optgroup label="{{ group.parent }}">
+					{% for child in group.children %}
+					<option value="{{ child.value }}">{{ child.title }}</option>
 					{% endfor %}
 				</optgroup>
 				{% endfor %}

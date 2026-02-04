@@ -13,7 +13,12 @@ from .forms import (
     LifeStyleForm,
 )
 from .models import Target, LifeStyle, Category
-from .services.category import get_parent_categories, get_child_categories
+from .services.category import (
+    get_category_groups,
+    get_allowed_category_values,
+    parse_category_value,
+    category_to_value,
+)
 from .services.target import create_target, update_achievement_level
 from .services.lifestyle import create_lifestyle, list_lifestyles, update_lifestyle
 from .services.radarchart import generate_band_chart_data, generate_band_chart_data_for_date
@@ -231,13 +236,10 @@ def update_achievement(request, target_id):
 @login_required
 def lifestyle(request):
     notice = ""
-    parents = list(get_parent_categories())
-    category_groups = [(parent, list(get_child_categories(parent))) for parent in parents]
-    allowed_category_ids = {
-        child.id for _, children in category_groups for child in children
-    }
+    category_groups = get_category_groups()
+    allowed_category_values = get_allowed_category_values()
 
-    rows = [{"category_id": "", "time": "", "content": ""}]
+    rows = [{"category_value": "", "time": "", "content": ""}]
     date_value = date.today()
     self_evaluation_value = 0
 
@@ -246,36 +248,43 @@ def lifestyle(request):
         date_value = parse_date(date_str) if date_str else None
         self_eval_str = request.POST.get("self_evaluation", "").strip()
 
-        category_ids = request.POST.getlist("category")
+        category_values = request.POST.getlist("category")
         times = request.POST.getlist("time")
         contents = request.POST.getlist("content")
 
-        max_len = max(len(category_ids), len(times), len(contents), 1)
+        max_len = max(len(category_values), len(times), len(contents), 1)
         rows = []
         valid_rows = []
 
         for i in range(max_len):
-            category_id = category_ids[i] if i < len(category_ids) else ""
+            category_value = category_values[i] if i < len(category_values) else ""
             time_value = times[i] if i < len(times) else ""
             content_value = contents[i] if i < len(contents) else ""
             rows.append(
                 {
-                    "category_id": category_id,
+                    "category_value": category_value,
                     "time": time_value,
                     "content": content_value,
                 }
             )
 
-            if not category_id and not time_value and not content_value:
+            if not category_value and not time_value and not content_value:
                 continue
 
-            if not category_id or not time_value:
+            if not category_value or not time_value:
                 notice = "カテゴリと時間は必須です。"
                 continue
 
-            if not category_id.isdigit() or int(category_id) not in allowed_category_ids:
+            if category_value not in allowed_category_values:
                 notice = "カテゴリを正しく選択してください。"
                 continue
+
+            parsed = parse_category_value(category_value)
+            if not parsed:
+                notice = "カテゴリを正しく選択してください。"
+                continue
+
+            parent_title, child_title = parsed
 
             try:
                 time_decimal = Decimal(time_value)
@@ -290,7 +299,8 @@ def lifestyle(request):
 
             valid_rows.append(
                 {
-                    "category_id": int(category_id),
+                    "parent_title": parent_title,
+                    "child_title": child_title,
                     "time": time_decimal,
                     "content": content_value,
                 }
@@ -316,14 +326,19 @@ def lifestyle(request):
             if total_time != Decimal("24.0"):
                 notice = "1日の合計時間は24.0時間にしてください。"
             else:
-                categories = Category.objects.in_bulk(
-                    [row["category_id"] for row in valid_rows]
-                )
                 for row in valid_rows:
+                    parent, _ = Category.objects.get_or_create(
+                        title=row["parent_title"],
+                        parent=None,
+                    )
+                    child, _ = Category.objects.get_or_create(
+                        title=row["child_title"],
+                        parent=parent,
+                    )
                     create_lifestyle(
                         user=request.user,
                         date=date_value,
-                        category=categories[row["category_id"]],
+                        category=child,
                         time=row["time"],
                         content=row["content"],
                         self_evaluation=self_evaluation_value,
@@ -355,57 +370,61 @@ def lifestyle_detail(request, date):
     if not date_value:
         return redirect("healthapp:lifestyle")
 
-    parents = list(get_parent_categories())
-    category_groups = [(parent, list(get_child_categories(parent))) for parent in parents]
-    allowed_category_ids = {
-        child.id for _, children in category_groups for child in children
-    }
+    category_groups = get_category_groups()
+    allowed_category_values = get_allowed_category_values()
 
     items = list_lifestyles(request.user).filter(date=date_value)
     rows = [
         {
-            "category_id": item.category_id,
+            "category_value": category_to_value(item.category) or "",
             "time": item.time,
             "content": item.content,
         }
         for item in items
-    ] or [{"category_id": "", "time": "", "content": ""}]
+    ] or [{"category_value": "", "time": "", "content": ""}]
 
     self_evaluation_value = items[0].self_evaluation if items else 0
 
     notice = ""
-    if request.method == "POST":
+        if request.method == "POST":
         self_eval_str = request.POST.get("self_evaluation", "").strip()
-        category_ids = request.POST.getlist("category")
+        category_values = request.POST.getlist("category")
         times = request.POST.getlist("time")
         contents = request.POST.getlist("content")
 
-        max_len = max(len(category_ids), len(times), len(contents), 1)
+        max_len = max(len(category_values), len(times), len(contents), 1)
         rows = []
         valid_rows = []
 
         for i in range(max_len):
-            category_id = category_ids[i] if i < len(category_ids) else ""
+            category_value = category_values[i] if i < len(category_values) else ""
             time_value = times[i] if i < len(times) else ""
             content_value = contents[i] if i < len(contents) else ""
             rows.append(
                 {
-                    "category_id": category_id,
+                    "category_value": category_value,
                     "time": time_value,
                     "content": content_value,
                 }
             )
 
-            if not category_id and not time_value and not content_value:
+            if not category_value and not time_value and not content_value:
                 continue
 
-            if not category_id or not time_value:
+            if not category_value or not time_value:
                 notice = "カテゴリと時間は必須です。"
                 continue
 
-            if not category_id.isdigit() or int(category_id) not in allowed_category_ids:
+            if category_value not in allowed_category_values:
                 notice = "カテゴリを正しく選択してください。"
                 continue
+
+            parsed = parse_category_value(category_value)
+            if not parsed:
+                notice = "カテゴリを正しく選択してください。"
+                continue
+
+            parent_title, child_title = parsed
 
             try:
                 time_decimal = Decimal(time_value)
@@ -420,7 +439,8 @@ def lifestyle_detail(request, date):
 
             valid_rows.append(
                 {
-                    "category_id": int(category_id),
+                    "parent_title": parent_title,
+                    "child_title": child_title,
                     "time": time_decimal,
                     "content": content_value,
                 }
@@ -444,15 +464,20 @@ def lifestyle_detail(request, date):
             if total_time != Decimal("24.0"):
                 notice = "1日の合計時間は24.0時間にしてください。"
             else:
-                categories = Category.objects.in_bulk(
-                    [row["category_id"] for row in valid_rows]
-                )
                 LifeStyle.objects.filter(user=request.user, date=date_value).delete()
                 for row in valid_rows:
+                    parent, _ = Category.objects.get_or_create(
+                        title=row["parent_title"],
+                        parent=None,
+                    )
+                    child, _ = Category.objects.get_or_create(
+                        title=row["child_title"],
+                        parent=parent,
+                    )
                     create_lifestyle(
                         user=request.user,
                         date=date_value,
-                        category=categories[row["category_id"]],
+                        category=child,
                         time=row["time"],
                         content=row["content"],
                         self_evaluation=self_evaluation_value,
