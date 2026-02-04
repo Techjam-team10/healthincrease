@@ -1,5 +1,5 @@
 from django.db.models import Sum
-from ..models import Category, LifeStyle, RadarChart
+from ..models import Category, LifeStyle, RadarChartData
 from datetime import date
 
 # --- C. 分析・可視化 (当初の指定) ---

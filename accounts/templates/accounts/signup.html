@@ -1,0 +1,67 @@
+<h3>会員登録</h3>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+    <div>
+        <label for="{{ form.username.id_for_label }}">ユーザー名</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+            <div>
+                {% for error in form.username.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="{{ form.mail.id_for_label }}">メールアドレス</label>
+        {{ form.mail }}
+        {% if form.mail.errors %}
+            <div>
+                {% for error in form.mail.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="{{ form.password1.id_for_label }}">パスワード</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+            <div>
+                {% for error in form.password1.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="{{ form.password2.id_for_label }}">パスワード（確認）</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+            <div>
+                {% for error in form.password2.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <button type="submit">登録</button>
+</form>
+
+<hr>
+<p>
+    既にアカウントをお持ちですか？ <a href="{% url 'accounts:signin' %}">ログイン</a>
+</p>

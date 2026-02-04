@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>health-increase</title>
+</head>
+<body>
+    <header>
+        <h1>health-increase</h1>
+        <nav>
+            <a href="{% url 'healthapp:home' %}">ホーム</a>
+            <a href="{% url 'healthapp:target' %}">目標</a>
+            <a href="{% url 'healthapp:lifestyle' %}">行動ログ</a>
+            <a href="{% url 'healthapp:analysis' %}">分析</a>
+            <a href="{% url 'healthapp:profile' %}">プロフィール</a>
+            <a href="{% url 'healthapp:timeline' %}">タイムライン</a>
+        </nav>
+    </header>
+    <main>
+    {% block content %}{% endblock %}
+    </main>
+    <footer>© techjam team10</footer>
+</body>
+</html>
