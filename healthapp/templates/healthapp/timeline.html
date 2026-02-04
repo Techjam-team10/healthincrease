@@ -1,1 +1,70 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'healthapp/css/timeline.css' %}">
+<script src="{% static 'healthapp/js/timeline.js' %}" defer></script>
+
+<section class="timeline">
+    <header class="timeline__header">
+        <h2 class="timeline__title">タイムライン</h2>
+        <p class="timeline__subtitle">今日の気づきをシェアしよう。</p>
+    </header>
+
+    <div class="timeline__composer">
+        <h3 class="timeline__section-title">投稿する</h3>
+        {% if notice %}
+            <p class="timeline__notice">{{ notice }}</p>
+        {% endif %}
+        <form class="timeline__form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <label class="timeline__label" for="timeline-content">内容</label>
+            <textarea id="timeline-content" name="content" rows="3" maxlength="280" class="timeline__textarea" placeholder="今日の記録や気づきを入力してください"></textarea>
+            <div class="timeline__form-footer">
+                <span class="timeline__counter" data-counter="timeline-content">0 / 280</span>
+                <button type="submit" class="timeline__button" {% if not has_user %}disabled{% endif %}>投稿</button>
+            </div>
+            {% if not has_user %}
+                <p class="timeline__hint">投稿するにはユーザーが必要です。</p>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="timeline__list">
+        <h3 class="timeline__section-title">みんなの投稿</h3>
+        {% if posts %}
+            {% for post in posts %}
+                <article class="timeline__card">
+                    <div class="timeline__card-header">
+                        <p class="timeline__author">{{ post.user.mail }}</p>
+                        <time class="timeline__date">{{ post.created_at|date:"Y/m/d H:i" }}</time>
+                    </div>
+                    <p class="timeline__content">{{ post.content }}</p>
+                    <div class="timeline__card-actions">
+                        <form method="post" class="timeline__action">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="favorite">
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                            <button
+                                type="submit"
+                                class="timeline__button timeline__button--ghost"
+                                {% if post.id in liked_post_ids %}disabled{% endif %}
+                            >
+                                {% if post.id in liked_post_ids %}
+                                    いいね済み {{ post.favorite }}
+                                {% else %}
+                                    いいね {{ post.favorite }}
+                                {% endif %}
+                            </button>
+                        </form>
+                        <a class="timeline__link" href="{% url 'healthapp:timeline_detail' post.id %}">詳細</a>
+                    </div>
+                </article>
+            {% endfor %}
+        {% else %}
+            <p class="timeline__empty">まだ投稿がありません。</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
