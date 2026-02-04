@@ -72,6 +72,10 @@ class LifeStyle(models.Model):
     content = models.TextField(
         blank=True
     )
+    self_evaluation = models.SmallIntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
 
     def __str__(self):
         return f"{self.user.mail} - {self.date}"

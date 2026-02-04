@@ -40,6 +40,17 @@
 <form method="post" action="{% url 'healthapp:lifestyle_detail' date_value|date:'Y-m-d' %}">
 	{% csrf_token %}
 	<input type="hidden" name="date" value="{{ date_value|date:'Y-m-d' }}">
+	<div>
+		<label for="id_self_evaluation">自己評価(0〜100)</label>
+		<input
+			type="number"
+			name="self_evaluation"
+			id="id_self_evaluation"
+			min="0"
+			max="100"
+			value="{{ self_evaluation_value }}"
+		>
+	</div>
 
 	<div id="action-rows">
 		{% for row in rows %}

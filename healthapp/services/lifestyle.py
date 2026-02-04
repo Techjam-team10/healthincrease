@@ -13,13 +13,15 @@ def create_lifestyle(
     category: Category,
     time: Decimal,
     content: str = "",
+    self_evaluation: int = 0,
 ) -> LifeStyle:
     return LifeStyle.objects.create(
         user=user,
         date=date,
         category=category,
         time=time,
-        content=content
+        content=content,
+        self_evaluation=self_evaluation,
     )
 
 def get_lifestyle_by_date(user: User, target_date: date) -> QuerySet[LifeStyle]:
@@ -43,10 +45,12 @@ def update_lifestyle(
     category: Category,
     time: Decimal,
     content: str = "",
+    self_evaluation: int = 0,
 ) -> LifeStyle:
     lifestyle.date = date_value
     lifestyle.category = category
     lifestyle.time = time
     lifestyle.content = content
-    lifestyle.save(update_fields=["date", "category", "time", "content"])
+    lifestyle.self_evaluation = self_evaluation
+    lifestyle.save(update_fields=["date", "category", "time", "content", "self_evaluation"])
     return lifestyle
