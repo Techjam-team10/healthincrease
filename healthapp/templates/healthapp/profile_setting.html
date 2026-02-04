@@ -1,1 +1,27 @@
 {% extends 'base.html' %}
+
+{% block content %}
+<div>
+    <h2>プロフィール編集</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            {{ form.as_p }}
+        </div>
+        
+        <div>
+            <button type="submit">保存</button>
+            <a href="{% url 'healthapp:profile' %}">キャンセル</a>
+        </div>
+    </form>
+    
+    {% if form.non_field_errors %}
+    <div>
+        {% for error in form.non_field_errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
