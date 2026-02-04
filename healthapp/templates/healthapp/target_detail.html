@@ -1,1 +1,32 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block content %}
+<h2>目標詳細</h2>
+
+<ul>
+    <li><strong>期限:</strong> {{ target.term }}</li>
+    <li><strong>内容:</strong> {{ target.content }}</li>
+    <li><strong>現在の達成度:</strong> {{ target.achievement_level }}%</li>
+</ul>
+
+<hr>
+
+<h3>自己評価を更新</h3>
+<form method="post" action="{% url 'healthapp:update_achievement' target.id %}">
+    {% csrf_token %}
+    <label for="level">達成度を入力 (0-100):</label>
+    <input type="number" name="achievement_level" id="level" 
+           min="0" max="100" value="{{ target.achievement_level }}">
+    <button type="submit">更新</button>
+</form>
+
+<hr>
+
+<p>
+    <a href="{% url 'healthapp:target_edit' target.id %}">
+        <button type="button">目標の内容を編集する</button>
+    </a>
+</p>
+
+<p><a href="{% url 'healthapp:target' %}">一覧に戻る</a></p>
+{% endblock %}
