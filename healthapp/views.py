@@ -239,10 +239,12 @@ def lifestyle(request):
 
     rows = [{"category_id": "", "time": "", "content": ""}]
     date_value = date.today()
+    self_evaluation_value = 0
 
     if request.method == "POST":
         date_str = request.POST.get("date", "").strip()
         date_value = parse_date(date_str) if date_str else None
+        self_eval_str = request.POST.get("self_evaluation", "").strip()
 
         category_ids = request.POST.getlist("category")
         times = request.POST.getlist("time")
@@ -294,6 +296,16 @@ def lifestyle(request):
                 }
             )
 
+        if self_eval_str == "":
+            notice = "自己評価を入力してください。"
+        else:
+            try:
+                self_evaluation_value = int(self_eval_str)
+                if not 0 <= self_evaluation_value <= 100:
+                    raise ValueError
+            except ValueError:
+                notice = "自己評価は0〜100で入力してください。"
+
         if not date_value:
             notice = "日付を入力してください。"
         elif not valid_rows:
@@ -314,6 +326,7 @@ def lifestyle(request):
                         category=categories[row["category_id"]],
                         time=row["time"],
                         content=row["content"],
+                        self_evaluation=self_evaluation_value,
                     )
                 return redirect("healthapp:lifestyle")
 
@@ -331,6 +344,7 @@ def lifestyle(request):
             "category_groups": category_groups,
             "rows": rows,
             "date_value": date_value,
+            "self_evaluation_value": self_evaluation_value,
         },
     )
 
@@ -357,8 +371,11 @@ def lifestyle_detail(request, date):
         for item in items
     ] or [{"category_id": "", "time": "", "content": ""}]
 
+    self_evaluation_value = items[0].self_evaluation if items else 0
+
     notice = ""
     if request.method == "POST":
+        self_eval_str = request.POST.get("self_evaluation", "").strip()
         category_ids = request.POST.getlist("category")
         times = request.POST.getlist("time")
         contents = request.POST.getlist("content")
@@ -409,6 +426,16 @@ def lifestyle_detail(request, date):
                 }
             )
 
+        if self_eval_str == "":
+            notice = "自己評価を入力してください。"
+        else:
+            try:
+                self_evaluation_value = int(self_eval_str)
+                if not 0 <= self_evaluation_value <= 100:
+                    raise ValueError
+            except ValueError:
+                notice = "自己評価は0〜100で入力してください。"
+
         if not valid_rows:
             if not notice:
                 notice = "少なくとも1件の行動を入力してください。"
@@ -428,8 +455,9 @@ def lifestyle_detail(request, date):
                         category=categories[row["category_id"]],
                         time=row["time"],
                         content=row["content"],
+                        self_evaluation=self_evaluation_value,
                     )
-                return redirect("healthapp:lifestyle_detail", date=date)
+                return redirect("healthapp:lifestyle")
 
     chart_data = generate_band_chart_data_for_date(request.user, date_value)
     return render(
@@ -441,6 +469,7 @@ def lifestyle_detail(request, date):
             "category_groups": category_groups,
             "date_value": date_value,
             "chart_data": chart_data,
+            "self_evaluation_value": self_evaluation_value,
         },
     )
 

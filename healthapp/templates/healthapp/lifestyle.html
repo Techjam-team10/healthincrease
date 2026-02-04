@@ -13,6 +13,17 @@
 		<label for="id_date">日付</label>
 		<input type="date" name="date" id="id_date" value="{{ date_value|date:'Y-m-d' }}">
 	</div>
+	<div>
+		<label for="id_self_evaluation">自己評価(0〜100)</label>
+		<input
+			type="number"
+			name="self_evaluation"
+			id="id_self_evaluation"
+			min="0"
+			max="100"
+			value="{{ self_evaluation_value }}"
+		>
+	</div>
 
 	<div id="action-rows">
 		{% for row in rows %}
@@ -57,7 +68,10 @@
 {% if grouped_items %}
 	{% for group_date, group in grouped_items %}
 		<section class="lifestyle-group">
-			<h3>{{ group_date }}</h3>
+			<h3>
+				{{ group_date }}
+				<span>（自己評価: {{ group.0.self_evaluation }}%）</span>
+			</h3>
 			<table border="1">
 				<thead>
 					<tr>
