@@ -19,8 +19,6 @@ urlpatterns = [
     path('target/<int:target_id>/edit/', views.target_edit, name='target_edit'),
     path('target/<int:target_id>/achievement/', views.update_achievement, name='update_achievement'),
     path('lifestyle/', views.lifestyle, name='lifestyle'),
-    path('lifestyle/<str:date>/', views.lifestyle_date, name='lifestyle_date'),
-    path('lifestyle/<str:date>/detail/', views.lifestyle_detail, name='lifestyle_detail'),
-    path('lifestyle/<str:date>/setdata/', views.lifestyle_setdata, name='lifestyle_setdata'),
+    path('lifestyle/<str:date>/', views.lifestyle_detail, name='lifestyle_detail'),
     path('analysis/', views.analysis, name='analysis'),
 ]

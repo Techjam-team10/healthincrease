@@ -1,10 +1,19 @@
-from django.db.models import QuerySet
-from healthapp.models import Category, LifeStyle  # 参照先を healthapp に変更
-from accounts.models import User
 from datetime import date
+from decimal import Decimal
+
+from django.db.models import QuerySet
+
+from accounts.models import User
+from healthapp.models import Category, LifeStyle  # 参照先を healthapp に変更
 
 # --- B. 行動(LifeStyle)関連関数 ---
-def create_lifestyle(user: User, date: date, category: Category, time: int, content: str = "") -> LifeStyle:
+def create_lifestyle(
+    user: User,
+    date: date,
+    category: Category,
+    time: Decimal,
+    content: str = "",
+) -> LifeStyle:
     return LifeStyle.objects.create(
         user=user,
         date=date,
@@ -22,3 +31,22 @@ def aggregate_lifestyle_by_period(user: User, start_date: date, end_date: date) 
     for item in items:
         summary[item.category] = summary.get(item.category, 0) + item.time
     return summary
+
+
+def list_lifestyles(user: User) -> QuerySet[LifeStyle]:
+    return LifeStyle.objects.filter(user=user).order_by("-date", "-id")
+
+
+def update_lifestyle(
+    lifestyle: LifeStyle,
+    date_value: date,
+    category: Category,
+    time: Decimal,
+    content: str = "",
+) -> LifeStyle:
+    lifestyle.date = date_value
+    lifestyle.category = category
+    lifestyle.time = time
+    lifestyle.content = content
+    lifestyle.save(update_fields=["date", "category", "time", "content"])
+    return lifestyle

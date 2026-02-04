@@ -1,16 +1,32 @@
+from datetime import date
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from collections import OrderedDict
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.utils.dateparse import parse_date
 from accounts.models import User
-from .forms import UserProfileForm, TargetForm, AchievementLevelForm
-from .models import Target
+from .forms import (
+    UserProfileForm,
+    TargetForm,
+    AchievementLevelForm,
+    LifeStyleForm,
+)
+from .models import Target, LifeStyle, Category
+from .services.category import get_parent_categories, get_child_categories
 from .services.target import create_target, update_achievement_level
+from .services.lifestyle import create_lifestyle, list_lifestyles, update_lifestyle
+from .services.radarchart import generate_band_chart_data, generate_band_chart_data_for_date
 
 
 def top(request):
     return render(request, "healthapp/index.html")
 
 def home(request):
-    return render(request, 'healthapp/home.html')
+    chart_data = {"groups": [], "legend": []}
+    if request.user.is_authenticated:
+        chart_data = generate_band_chart_data(request.user)
+    return render(request, 'healthapp/home.html', {"chart_data": chart_data})
 
 
 @login_required
@@ -212,20 +228,221 @@ def update_achievement(request, target_id):
     )
 
 
+@login_required
 def lifestyle(request):
-    return render(request, "healthapp/lifestyle.html")
+    notice = ""
+    parents = list(get_parent_categories())
+    category_groups = [(parent, list(get_child_categories(parent))) for parent in parents]
+    allowed_category_ids = {
+        child.id for _, children in category_groups for child in children
+    }
+
+    rows = [{"category_id": "", "time": "", "content": ""}]
+    date_value = date.today()
+
+    if request.method == "POST":
+        date_str = request.POST.get("date", "").strip()
+        date_value = parse_date(date_str) if date_str else None
+
+        category_ids = request.POST.getlist("category")
+        times = request.POST.getlist("time")
+        contents = request.POST.getlist("content")
+
+        max_len = max(len(category_ids), len(times), len(contents), 1)
+        rows = []
+        valid_rows = []
+
+        for i in range(max_len):
+            category_id = category_ids[i] if i < len(category_ids) else ""
+            time_value = times[i] if i < len(times) else ""
+            content_value = contents[i] if i < len(contents) else ""
+            rows.append(
+                {
+                    "category_id": category_id,
+                    "time": time_value,
+                    "content": content_value,
+                }
+            )
+
+            if not category_id and not time_value and not content_value:
+                continue
+
+            if not category_id or not time_value:
+                notice = "カテゴリと時間は必須です。"
+                continue
+
+            if not category_id.isdigit() or int(category_id) not in allowed_category_ids:
+                notice = "カテゴリを正しく選択してください。"
+                continue
+
+            try:
+                time_decimal = Decimal(time_value)
+                if time_decimal < 0:
+                    raise ValueError
+                if time_decimal.as_tuple().exponent < -1:
+                    raise ValueError
+                time_decimal = time_decimal.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+            except (InvalidOperation, ValueError):
+                notice = "時間は0以上で小数第1位まで入力してください。"
+                continue
+
+            valid_rows.append(
+                {
+                    "category_id": int(category_id),
+                    "time": time_decimal,
+                    "content": content_value,
+                }
+            )
+
+        if not date_value:
+            notice = "日付を入力してください。"
+        elif not valid_rows:
+            if not notice:
+                notice = "少なくとも1件の行動を入力してください。"
+        else:
+            total_time = sum((row["time"] for row in valid_rows), Decimal("0.0"))
+            if total_time != Decimal("24.0"):
+                notice = "1日の合計時間は24.0時間にしてください。"
+            else:
+                categories = Category.objects.in_bulk(
+                    [row["category_id"] for row in valid_rows]
+                )
+                for row in valid_rows:
+                    create_lifestyle(
+                        user=request.user,
+                        date=date_value,
+                        category=categories[row["category_id"]],
+                        time=row["time"],
+                        content=row["content"],
+                    )
+                return redirect("healthapp:lifestyle")
+
+    items = list_lifestyles(request.user)
+    grouped_items = OrderedDict()
+    for item in items:
+        grouped_items.setdefault(item.date, []).append(item)
+    return render(
+        request,
+        "healthapp/lifestyle.html",
+        {
+            "items": items,
+            "grouped_items": grouped_items.items(),
+            "notice": notice,
+            "category_groups": category_groups,
+            "rows": rows,
+            "date_value": date_value,
+        },
+    )
 
 
-def lifestyle_date(request, date):
-    return render(request, "healthapp/lifestyle_date.html", {"date": date})
-
-
+@login_required
 def lifestyle_detail(request, date):
-    return render(request, "healthapp/lifestyle_detail.html", {"date": date})
+    date_value = parse_date(date)
+    if not date_value:
+        return redirect("healthapp:lifestyle")
 
+    parents = list(get_parent_categories())
+    category_groups = [(parent, list(get_child_categories(parent))) for parent in parents]
+    allowed_category_ids = {
+        child.id for _, children in category_groups for child in children
+    }
 
-def lifestyle_setdata(request, date):
-    return render(request, "healthapp/lifestyle_setdata.html", {"date": date})
+    items = list_lifestyles(request.user).filter(date=date_value)
+    rows = [
+        {
+            "category_id": item.category_id,
+            "time": item.time,
+            "content": item.content,
+        }
+        for item in items
+    ] or [{"category_id": "", "time": "", "content": ""}]
+
+    notice = ""
+    if request.method == "POST":
+        category_ids = request.POST.getlist("category")
+        times = request.POST.getlist("time")
+        contents = request.POST.getlist("content")
+
+        max_len = max(len(category_ids), len(times), len(contents), 1)
+        rows = []
+        valid_rows = []
+
+        for i in range(max_len):
+            category_id = category_ids[i] if i < len(category_ids) else ""
+            time_value = times[i] if i < len(times) else ""
+            content_value = contents[i] if i < len(contents) else ""
+            rows.append(
+                {
+                    "category_id": category_id,
+                    "time": time_value,
+                    "content": content_value,
+                }
+            )
+
+            if not category_id and not time_value and not content_value:
+                continue
+
+            if not category_id or not time_value:
+                notice = "カテゴリと時間は必須です。"
+                continue
+
+            if not category_id.isdigit() or int(category_id) not in allowed_category_ids:
+                notice = "カテゴリを正しく選択してください。"
+                continue
+
+            try:
+                time_decimal = Decimal(time_value)
+                if time_decimal < 0:
+                    raise ValueError
+                if time_decimal.as_tuple().exponent < -1:
+                    raise ValueError
+                time_decimal = time_decimal.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+            except (InvalidOperation, ValueError):
+                notice = "時間は0以上で小数第1位まで入力してください。"
+                continue
+
+            valid_rows.append(
+                {
+                    "category_id": int(category_id),
+                    "time": time_decimal,
+                    "content": content_value,
+                }
+            )
+
+        if not valid_rows:
+            if not notice:
+                notice = "少なくとも1件の行動を入力してください。"
+        else:
+            total_time = sum((row["time"] for row in valid_rows), Decimal("0.0"))
+            if total_time != Decimal("24.0"):
+                notice = "1日の合計時間は24.0時間にしてください。"
+            else:
+                categories = Category.objects.in_bulk(
+                    [row["category_id"] for row in valid_rows]
+                )
+                LifeStyle.objects.filter(user=request.user, date=date_value).delete()
+                for row in valid_rows:
+                    create_lifestyle(
+                        user=request.user,
+                        date=date_value,
+                        category=categories[row["category_id"]],
+                        time=row["time"],
+                        content=row["content"],
+                    )
+                return redirect("healthapp:lifestyle_detail", date=date)
+
+    chart_data = generate_band_chart_data_for_date(request.user, date_value)
+    return render(
+        request,
+        "healthapp/lifestyle_detail.html",
+        {
+            "rows": rows,
+            "notice": notice,
+            "category_groups": category_groups,
+            "date_value": date_value,
+            "chart_data": chart_data,
+        },
+    )
 
 def analysis(request):
     return render(request, "healthapp/analysis.html")

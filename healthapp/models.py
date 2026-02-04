@@ -59,7 +59,9 @@ class LifeStyle(models.Model):
         related_name="life_styles"
     )
     date = models.DateField()
-    time = models.IntegerField(
+    time = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
         validators=[MinValueValidator(0)]
     )
     category = models.ForeignKey(
