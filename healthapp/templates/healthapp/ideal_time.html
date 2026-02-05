@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'healthapp/css/ideal_time.css' %}">
+
+<h2>理想の行動時間設定</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <table class="ideal-table">
+        <tr>
+            <th>カテゴリ</th>
+            <th>理想時間（時間）</th>
+        </tr>
+        {% for category in categories %}
+        <tr>
+            <td>{{ category.title }}</td>
+            <td>
+                <input
+                    type="number"
+                    name="category_{{ category.id }}"
+                    value="{{ category.ideal_hours }}"
+                    step="0.5"
+                    min="0"
+                >
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <button type="submit">保存</button>
+</form>
+{% endblock %}

@@ -1,0 +1,194 @@
+/* =========================
+   Timeline Base
+========================= */
+.timeline {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* =========================
+   Page Header（投稿詳細）
+========================= */
+.timeline__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.timeline__title {
+    font-size: 1.4rem;
+    margin: 0;
+}
+
+.timeline__link {
+    font-size: 0.9rem;
+    color: #2563eb;
+}
+
+/* =========================
+   Notice / Empty
+========================= */
+.timeline__notice {
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.timeline__empty {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 12px;
+}
+
+/* =========================
+   Post Card
+========================= */
+.timeline__card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.06),
+        0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.timeline__card--detail {
+    margin-bottom: 32px;
+}
+
+.timeline__card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.timeline__author {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.timeline__date {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.timeline__content {
+    margin-bottom: 14px;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+}
+
+/* =========================
+   Actions
+========================= */
+.timeline__action {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.timeline__button {
+    padding: 6px 14px;
+    border-radius: 9999px;
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.timeline__button--ghost {
+    background: #e5edff;
+    color: #1e40af;
+}
+
+.timeline__button:hover {
+    opacity: 0.9;
+}
+
+.timeline__button[disabled] {
+    background: #c7d2fe;
+    cursor: not-allowed;
+}
+
+/* =========================
+   Comments
+========================= */
+.timeline__comments {
+    background: #f9fafb;
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.timeline__section-title {
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+/* コメント投稿フォーム */
+.timeline__form {
+    margin-bottom: 20px;
+}
+
+.timeline__label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.timeline__textarea {
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    resize: vertical;
+}
+
+.timeline__form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.timeline__counter {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.timeline__hint {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-top: 6px;
+}
+
+/* =========================
+   Comment List
+========================= */
+.timeline__comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.timeline__comment {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+
+.timeline__comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.timeline__comment-content {
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+}

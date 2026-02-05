@@ -1,7 +1,6 @@
 from decimal import Decimal
 from typing import List, Dict
-
-from healthapp.models import LifeStyle
+from healthapp.models import LifeStyle, Category
 from .category import CATEGORY, find_parent_by_child
 
 
@@ -17,22 +16,20 @@ COLOR_PALETTE = [
 ]
 
 
+
 def generate_band_chart_data(user, limit_days: int = 7) -> Dict:
-    """
-    帯グラフ表示用データを生成する
-    返り値: {
-      "groups": [
-        {"date": date, "segments": [{"label": str, "hours": Decimal, "percent": float, "color": str}, ...]},
-      ],
-      "legend": [{"label": str, "color": str}, ...]
-    }
-    """
     parent_titles = list(CATEGORY.keys())
+
     color_map = {
         parent: COLOR_PALETTE[i % len(COLOR_PALETTE)]
         for i, parent in enumerate(parent_titles)
     }
 
+    # 親カテゴリをDBから取得（ここが基準）
+    parents = Category.objects.filter(parent__isnull=True).order_by("id")
+    parent_map = {c.title: c for c in parents}
+
+    # 表示対象日
     date_list = list(
         LifeStyle.objects.filter(user=user)
         .values_list("date", flat=True)
@@ -47,36 +44,44 @@ def generate_band_chart_data(user, limit_days: int = 7) -> Dict:
         items = (
             LifeStyle.objects.filter(user=user, date=day)
             .select_related("category", "category__parent")
-            .order_by("id")
         )
-        totals = {parent: Decimal("0.0") for parent in parent_titles}
+
+        totals = {parent.title: Decimal("0.0") for parent in parents}
+
         for item in items:
             if item.category.parent:
                 parent_title = item.category.parent.title
             else:
-                parent_title = find_parent_by_child(item.category.title) or item.category.title
-            if parent_title not in totals:
-                continue
-            totals[parent_title] += item.time
+                parent_title = item.category.title
+
+            if parent_title in totals:
+                totals[parent_title] += item.time
 
         segments = []
-        for parent in parent_titles:
-            hours = totals.get(parent, Decimal("0.0"))
+        for parent in parents:
+            hours = totals[parent.title]
             percent = float((hours / Decimal("24.0")) * 100) if hours else 0.0
-            segments.append(
-                {
-                    "label": parent,
-                    "hours": hours,
-                    "percent": percent,
-                    "color": color_map[parent],
-                }
-            )
+
+            segments.append({
+                "label": parent.title,
+                "hours": hours,
+                "percent": percent,
+                "color": color_map[parent.title],
+            })
 
         groups.append({"date": day, "segments": segments})
 
-    legend = [{"label": parent, "color": color_map[parent]} for parent in parent_titles]
-    return {"groups": groups, "legend": legend}
+    # legend（親カテゴリのみ）
+    legend = [
+        {
+            "label": parent.title,
+            "color": color_map[parent.title],
+            "category_id": parent.id,
+        }
+        for parent in parents
+    ]
 
+    return {"groups": groups, "legend": legend}
 
 def generate_band_chart_data_for_date(user, target_date) -> Dict:
     """

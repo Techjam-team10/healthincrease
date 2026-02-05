@@ -1,0 +1,223 @@
+/* =========================
+   Base / Reset
+========================= */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont,
+        "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #f4f6f8;
+    color: #333;
+    line-height: 1.6;
+}
+
+header, main, footer {
+    padding: 16px 24px;
+}
+
+footer {
+    text-align: center;
+    font-size: 14px;
+    color: #666; 
+}
+
+h1, h2, h3 {
+    margin: 0 0 12px;
+}
+
+a {
+    color: #2563eb;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* =========================
+   Layout
+========================= */
+section {
+    margin-bottom: 32px;
+}
+
+hr {
+    margin: 32px 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+/* =========================
+   Forms
+========================= */
+form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+}
+button:hover {
+    background: #1e40af;
+}
+button[disabled] {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* =========================
+   Action Rows
+========================= */
+.action-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 3fr auto;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 12px;
+}
+
+.remove-row {
+    background: #ef4444;
+}
+.remove-row:hover {
+    background: #b91c1c;
+}
+
+/* =========================
+   Tables
+========================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+th,
+td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background: #f1f5f9;
+    text-align: left;
+}
+
+/* =========================
+   Band Chart (行動ログ)
+========================= */
+.band-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.band-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.band-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.band-date {
+    min-width: 110px;
+    font-weight: 600;
+}
+
+.band-bar {
+    display: flex;
+    width: 100%;
+    height: 18px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.band-segment {
+    height: 100%;
+}
+
+/* =========================
+   Messages / Notice
+========================= */
+p {
+    margin: 8px 0;
+}
+
+/* =========================
+   Profile
+========================= */
+.profile-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+}
+
+/* =========================
+   Target
+========================= */
+ul {
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 6px;
+}
+
+/* =========================
+   Utility
+========================= */
+.text-center {
+    text-align: center;
+}

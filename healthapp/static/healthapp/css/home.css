@@ -1,0 +1,140 @@
+/* =========================
+   Home Page
+========================= */
+
+/* ページ全体 */
+h1 {
+    margin-bottom: 24px;
+}
+
+/* セクション */
+section {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 見出し */
+section > h2 {
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+    border-left: 4px solid #2563eb;
+    padding-left: 8px;
+}
+
+/* =========================
+   Band Legend
+========================= */
+.band-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* =========================
+   Band Chart
+========================= */
+.band-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.band-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.band-date {
+    min-width: 110px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* バー背景 */
+.band-bar {
+    display: flex;
+    flex: 1;
+    height: 18px;
+    background: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+/* セグメント */
+.band-segment {
+    height: 100%;
+    transition: opacity 0.15s ease;
+}
+
+.band-segment:hover {
+    opacity: 0.8;
+}
+
+/* =========================
+   Empty Message
+========================= */
+section > p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* home.css 追記 */
+.ideal-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.ideal-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.ideal-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+/* 理想時間 設定リンク */
+.ideal-setting-link {
+    margin-top: 12px;
+}
+
+.ideal-setting-link a {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.ideal-setting-link a:hover {
+    background: #1e40af;
+}
+

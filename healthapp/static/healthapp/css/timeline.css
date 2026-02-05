@@ -8,8 +8,10 @@
 
 .timeline__header {
   display: flex;
+  z-index: 5;
   align-items: baseline;
   justify-content: space-between;
+  position: relative;   /* ★ sticky / absolute をやめる */
   gap: 16px;
   margin-bottom: 24px;
   flex-wrap: wrap;
@@ -22,7 +24,7 @@
 
 .timeline__subtitle {
   margin: 4px 0 0;
-  color: #52606d;
+  color: #cbd2d9;
 }
 
 .timeline__section-title {
@@ -93,10 +95,6 @@
 .timeline__button:disabled {
   background: #9fb3c8;
   cursor: not-allowed;
-}
-
-.timeline__button--ghost {
-  background: #eef2ff;
   color: #1d4ed8;
 }
 
@@ -154,13 +152,13 @@
 }
 
 .timeline__link {
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.timeline__link:hover {
-  text-decoration: underline;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .timeline__comment-list {

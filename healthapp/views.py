@@ -22,6 +22,7 @@ from .services.category import (
 from .services.target import create_target, update_achievement_level
 from .services.lifestyle import create_lifestyle, list_lifestyles, update_lifestyle
 from .services.radarchart import generate_band_chart_data, generate_band_chart_data_for_date
+from .models import Category, IdealTimeAllocation
 
 
 def top(request):
@@ -29,9 +30,21 @@ def top(request):
 
 def home(request):
     chart_data = {"groups": [], "legend": []}
+    ideal_times = {}
+
     if request.user.is_authenticated:
         chart_data = generate_band_chart_data(request.user)
-    return render(request, 'healthapp/home.html', {"chart_data": chart_data})
+        ideal_times = {
+            i.category.id: i.ideal_hours
+            for i in IdealTimeAllocation.objects.filter(user=request.user)
+        }
+
+    context = {
+        "chart_data": chart_data,
+        "ideal_times": ideal_times,
+    }
+
+    return render(request, "healthapp/home.html", context)
 
 
 @login_required
@@ -168,72 +181,6 @@ def timeline_detail(request, post_id):
 
 
 @login_required
-def target(request):
-    targets = Target.objects.filter(user=request.user).order_by("term", "id")
-    return render(request, "healthapp/target.html", {"targets": targets})
-
-
-@login_required
-def target_detail(request, target_id):
-    target = get_object_or_404(Target, pk=target_id, user=request.user)
-    achievement_form = AchievementLevelForm(instance=target)
-    return render(
-        request,
-        "healthapp/target_detail.html",
-        {"target": target, "achievement_form": achievement_form},
-    )
-
-
-@login_required
-def target_create(request):
-    if request.method == "POST":
-        form = TargetForm(request.POST)
-        if form.is_valid():
-            term = form.cleaned_data["term"]
-            content = form.cleaned_data["content"]
-            target = create_target(user=request.user, term=term, content=content)
-            return redirect("healthapp:target_detail", target_id=target.id)
-    else:
-        form = TargetForm()
-    return render(request, "healthapp/target_create.html", {"form": form})
-
-
-@login_required
-def target_edit(request, target_id):
-    target = get_object_or_404(Target, pk=target_id, user=request.user)
-    if request.method == "POST":
-        form = TargetForm(request.POST, instance=target)
-        if form.is_valid():
-            form.save()
-            return redirect("healthapp:target_detail", target_id=target.id)
-    else:
-        form = TargetForm(instance=target)
-    return render(
-        request,
-        "healthapp/target_edit.html",
-        {"form": form, "target": target},
-    )
-
-
-@login_required
-def update_achievement(request, target_id):
-    target = get_object_or_404(Target, pk=target_id, user=request.user)
-    if request.method != "POST":
-        return redirect("healthapp:target_detail", target_id=target.id)
-
-    form = AchievementLevelForm(request.POST, instance=target)
-    if form.is_valid():
-        update_achievement_level(target, form.cleaned_data["achievement_level"])
-        return redirect("healthapp:target_detail", target_id=target.id)
-
-    return render(
-        request,
-        "healthapp/target_detail.html",
-        {"target": target, "achievement_form": form},
-    )
-
-
-@login_required
 def lifestyle(request):
     notice = ""
     category_groups = get_category_groups()
@@ -323,8 +270,8 @@ def lifestyle(request):
                 notice = "少なくとも1件の行動を入力してください。"
         else:
             total_time = sum((row["time"] for row in valid_rows), Decimal("0.0"))
-            if total_time != Decimal("24.0"):
-                notice = "1日の合計時間は24.0時間にしてください。"
+            if total_time > Decimal("24.0"):
+                notice = "1日の合計時間は24時間以内にしてください。"
             else:
                 for row in valid_rows:
                     parent, _ = Category.objects.get_or_create(
@@ -461,8 +408,8 @@ def lifestyle_detail(request, date):
                 notice = "少なくとも1件の行動を入力してください。"
         else:
             total_time = sum((row["time"] for row in valid_rows), Decimal("0.0"))
-            if total_time != Decimal("24.0"):
-                notice = "1日の合計時間は24.0時間にしてください。"
+            if total_time > Decimal("24.0"):
+                notice = "1日の合計時間は24時間以内にしてください。"
             else:
                 LifeStyle.objects.filter(user=request.user, date=date_value).delete()
                 for row in valid_rows:
@@ -500,3 +447,44 @@ def lifestyle_detail(request, date):
 
 def analysis(request):
     return render(request, "healthapp/analysis.html")
+
+@login_required
+def ideal_time_setting(request):
+    categories = Category.objects.filter(parent__isnull=True)
+
+    if request.method == "POST":
+        print("POST DATA:", dict(request.POST))
+
+        for key, value in request.POST.items():
+            if not key.startswith("category_"):
+                continue
+            if value in ("", None):
+                continue
+
+            category_id = int(key.replace("category_", ""))
+            category = Category.objects.get(id=category_id)
+
+            IdealTimeAllocation.objects.update_or_create(
+                user=request.user,
+                category=category,  # ← ここが重要
+                defaults={"ideal_hours": Decimal(value)},
+            )
+
+        return redirect("healthapp:ideal_time")
+
+    # GET: 理想時間を category に直接注入（これが肝）
+    ideal_map = {
+        i.category.id: i.ideal_hours
+        for i in IdealTimeAllocation.objects.filter(user=request.user)
+    }
+
+    for category in categories:
+        category.ideal_hours = ideal_map.get(category.id)
+
+    return render(
+        request,
+        "healthapp/ideal_time.html",
+        {
+            "categories": categories,
+        },
+    )

@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
-
+{% load static %}
+<link rel="stylesheet" href="{% static 'healthapp/css/style.css' %}">
+<link rel="stylesheet" href="{% static 'healthapp/css/lifestyle.css' %}">
 {% block content %}
 <h2>行動の詳細・編集 ({{ date_value|date:'Y-m-d' }})</h2>
 
@@ -148,51 +150,4 @@
 
 	updateRemoveButtons();
 </script>
-
-<style>
-	.band-legend {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12px;
-		margin-bottom: 12px;
-	}
-	.legend-item {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 14px;
-	}
-	.legend-color {
-		width: 12px;
-		height: 12px;
-		display: inline-block;
-		border-radius: 2px;
-	}
-	.band-chart {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		margin-bottom: 16px;
-	}
-	.band-row {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-	.band-date {
-		min-width: 110px;
-		font-weight: 600;
-	}
-	.band-bar {
-		display: flex;
-		width: 100%;
-		height: 18px;
-		background: #e5e7eb;
-		border-radius: 6px;
-		overflow: hidden;
-	}
-	.band-segment {
-		height: 100%;
-	}
-</style>
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from accounts.models import User
+from django.conf import settings
 
 
 class Category(models.Model):
@@ -84,13 +85,11 @@ class LifeStyle(models.Model):
 class Post(models.Model):
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="posts"
     )
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
     favorite = models.IntegerField(
         default=0,
@@ -154,3 +153,32 @@ class RadarChartData(models.Model):
 
     def __str__(self):
         return f"{self.user.mail} - {self.category.title}: {self.value}"
+    
+class IdealTimeAllocation(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="ideal_time_allocations"
+    )
+
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="ideal_time_allocations"
+    )
+
+    ideal_hours = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        validators=[MinValueValidator(0)]
+    )
+
+    class Meta:
+        db_table = "ideal_time_allocation"
+        unique_together = ("user", "category")
+        ordering = ["user_id", "category_id"]
+
+    def __str__(self):
+        return f"{self.user.mail} - {self.category.title}: {self.ideal_hours}h"
