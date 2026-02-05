@@ -2,6 +2,7 @@ from decimal import Decimal
 from typing import List, Dict
 from healthapp.models import LifeStyle, Category
 from .category import CATEGORY, find_parent_by_child
+from healthapp.models import IdealTimeAllocation
 
 
 COLOR_PALETTE = [
@@ -18,18 +19,17 @@ COLOR_PALETTE = [
 
 
 def generate_band_chart_data(user, limit_days: int = 7) -> Dict:
-    parent_titles = list(CATEGORY.keys())
-
-    color_map = {
-        parent: COLOR_PALETTE[i % len(COLOR_PALETTE)]
-        for i, parent in enumerate(parent_titles)
-    }
-
     # 親カテゴリをDBから取得（ここが基準）
     parents = Category.objects.filter(parent__isnull=True).order_by("id")
-    parent_map = {c.title: c for c in parents}
 
-    # 表示対象日
+    # 色割り当て（表示順は CATEGORY.keys() を基準にする）
+    parent_titles = list(CATEGORY.keys())
+    color_map = {
+        title: COLOR_PALETTE[i % len(COLOR_PALETTE)]
+        for i, title in enumerate(parent_titles)
+    }
+
+    # 表示対象日（直近 limit_days 日）
     date_list = list(
         LifeStyle.objects.filter(user=user)
         .values_list("date", flat=True)
@@ -40,6 +40,9 @@ def generate_band_chart_data(user, limit_days: int = 7) -> Dict:
 
     groups: List[Dict] = []
 
+    # =========================
+    # 実績（通常の帯グラフ）
+    # =========================
     for day in date_list:
         items = (
             LifeStyle.objects.filter(user=user, date=day)
@@ -66,22 +69,57 @@ def generate_band_chart_data(user, limit_days: int = 7) -> Dict:
                 "label": parent.title,
                 "hours": hours,
                 "percent": percent,
-                "color": color_map[parent.title],
+                "color": color_map.get(parent.title),
             })
 
-        groups.append({"date": day, "segments": segments})
+        groups.append({
+            "date": day,
+            "segments": segments,
+        })
 
+    # =========================
+    # 理想時間（帯グラフ・1行目）
+    # =========================
+    ideal_map = {
+        i.category_id: i.ideal_hours
+        for i in IdealTimeAllocation.objects.filter(user=user)
+    }
+
+    ideal_segments = []
+    for parent in parents:
+        hours = ideal_map.get(parent.id, Decimal("0"))
+        percent = float((hours / Decimal("24.0")) * 100) if hours else 0.0
+
+        ideal_segments.append({
+            "label": parent.title,
+            "hours": hours,
+            "percent": percent,
+            "color": color_map.get(parent.title),
+            "is_ideal": True,
+        })
+
+    groups.insert(0, {
+        "date": "理想",
+        "segments": ideal_segments,
+        "is_ideal": True,
+    })
+
+    # =========================
     # legend（親カテゴリのみ）
+    # =========================
     legend = [
         {
             "label": parent.title,
-            "color": color_map[parent.title],
+            "color": color_map.get(parent.title),
             "category_id": parent.id,
         }
         for parent in parents
     ]
 
-    return {"groups": groups, "legend": legend}
+    return {
+        "groups": groups,
+        "legend": legend,
+    }
 
 def generate_band_chart_data_for_date(user, target_date) -> Dict:
     """
